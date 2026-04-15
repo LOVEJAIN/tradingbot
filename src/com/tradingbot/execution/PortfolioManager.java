@@ -10,7 +10,9 @@ import java.util.List;
 import java.util.Map;
 
 public class PortfolioManager {
-
+    private int totalTrades = 0;
+    private int winningTrades = 0;
+    private int losingTrades = 0;
     private double capital;
     private double riskPct = 1.0;
 
@@ -62,6 +64,11 @@ public class PortfolioManager {
             double pnl = (price - pos.getEntryPrice()) * pos.getQuantity();
             capital += pnl;
 
+            totalTrades++;
+
+            if (pnl > 0) winningTrades++;
+            else losingTrades++;
+
             System.out.println(symbol + " SELL @ " + price +
                     " | PnL: " + pnl +
                     " | Capital: " + capital);
@@ -95,8 +102,13 @@ public class PortfolioManager {
 
             int qtyToSell = pos.getQuantity() / 2;
 
-            double pnl = (currentPrice - pos.getEntryPrice()) * qtyToSell;
+            double pnl = (currentPrice - pos.getEntryPrice()) * pos.getQuantity();
             capital += pnl;
+
+            totalTrades++;
+
+            if (pnl > 0) winningTrades++;
+            else losingTrades++;
 
             pos.setPartialBooked(true);
             pos.setQuantity(pos.getQuantity() - qtyToSell);
@@ -138,5 +150,13 @@ public class PortfolioManager {
 
     public void printSummary() {
         System.out.println("Final Capital: " + capital);
+        System.out.println("Total Trades: " + totalTrades);
+        System.out.println("Winning Trades: " + winningTrades);
+        System.out.println("Losing Trades: " + losingTrades);
+
+        if (totalTrades > 0) {
+            double winRate = (winningTrades * 100.0) / totalTrades;
+            System.out.println("Win Rate: " + winRate + "%");
+        }
     }
 }
