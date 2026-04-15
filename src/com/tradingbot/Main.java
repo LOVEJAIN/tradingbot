@@ -33,10 +33,12 @@ public class Main {
         // 🔥 MAIN LOOP
         for (int i = strategy.minimumBars(); i < maxSteps; i++) {
 
+            // ✅ cooldown update ONCE per step
+            portfolio.updateCooldowns();
+
             Map<String, Double> scores = new HashMap<>();
             Map<String, Signal> signals = new HashMap<>();
 
-            // 🔹 Loop all stocks
             for (String symbol : symbols) {
 
                 List<Candle> candles = marketData.get(symbol);
@@ -44,7 +46,7 @@ public class Main {
                 List<Candle> subList = candles.subList(0, i);
                 double currentPrice = candles.get(i).getClose();
 
-                // ✅ Stop loss check
+                // ✅ Stop loss
                 portfolio.checkStopLoss(symbol, currentPrice);
 
                 Optional<Signal> signalOpt = strategy.evaluate(subList);
@@ -60,7 +62,7 @@ public class Main {
                 }
             }
 
-            // 🔥 RANKING (NO LAMBDA)
+            // ✅ Ranking
             List<Map.Entry<String, Double>> sorted = new ArrayList<>(scores.entrySet());
 
             sorted.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
@@ -73,9 +75,13 @@ public class Main {
                 double score = sorted.get(j).getValue();
                 Signal signal = signals.get(symbol);
 
-                System.out.println("STEP " + i + " -> SELECTED: " + symbol + " score=" + score);
+                List<Candle> candles = marketData.get(symbol);
+                List<Candle> subList = candles.subList(0, i);
 
-                portfolio.onSignal(symbol, signal);
+                System.out.println("STEP " + i + " -> SELECTED: " + symbol +
+                        " score=" + score);
+
+                portfolio.onSignal(symbol, signal, subList);
             }
         }
 

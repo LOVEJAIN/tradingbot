@@ -2,7 +2,10 @@ package com.tradingbot.model;
 
 public class Candle {
 
-    private double open, high, low, close;
+    private double open;
+    private double high;
+    private double low;
+    private double close;
     private long volume;
 
     public Candle(double open, double high, double low, double close, long volume) {
@@ -13,7 +16,9 @@ public class Candle {
         this.volume = volume;
     }
 
-    public double getClose() {
-        return close;
-    }
+    public double getOpen() { return open; }
+    public double getHigh() { return high; }
+    public double getLow() { return low; }
+    public double getClose() { return close; }
+    public long getVolume() { return volume; }
 }
