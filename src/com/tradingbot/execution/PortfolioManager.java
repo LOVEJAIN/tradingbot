@@ -61,19 +61,10 @@ public class PortfolioManager {
 
             Position pos = positions.get(symbol);
 
-            double pnl = (price - pos.getEntryPrice()) * pos.getQuantity();
-            capital += pnl;
+            closePosition(symbol, pos, price, "SELL");
 
             totalTrades++;
 
-            if (pnl > 0) winningTrades++;
-            else losingTrades++;
-
-            System.out.println(symbol + " SELL @ " + price +
-                    " | PnL: " + pnl +
-                    " | Capital: " + capital);
-
-            positions.remove(symbol);
         }
     }
 
@@ -121,19 +112,27 @@ public class PortfolioManager {
         // 🔥 FINAL STOP LOSS
         if (currentPrice <= pos.getStopLoss()) {
 
-            double pnl = (currentPrice - pos.getEntryPrice()) * pos.getQuantity();
-            capital += pnl;
-
-            System.out.println(symbol + " EXIT @ " + currentPrice +
-                    " | PnL: " + pnl +
-                    " | Capital: " + capital);
-
-            positions.remove(symbol);
+            closePosition(symbol, pos, currentPrice, "SL HIT");
 
             cooldownMap.put(symbol, cooldownPeriod);
         }
     }
+    private void closePosition(String symbol, Position pos, double exitPrice, String reason) {
 
+        double pnl = (exitPrice - pos.getEntryPrice()) * pos.getQuantity();
+        capital += pnl;
+
+        totalTrades++;
+
+        if (pnl > 0) winningTrades++;
+        else losingTrades++;
+
+        System.out.println(symbol + " " + reason + " @ " + exitPrice +
+                " | PnL: " + pnl +
+                " | Capital: " + capital);
+
+        positions.remove(symbol);
+    }
     public void updateCooldowns() {
 
         Map<String, Integer> newMap = new HashMap<>();
