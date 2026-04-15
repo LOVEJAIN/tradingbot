@@ -32,20 +32,23 @@ public class MovingAverageCrossStrategy implements Strategy {
         // ==============================
         double trendStrength = Math.abs(ma50 - ma200) / price;
 
-// ✅ Relaxed threshold
-        if (trendStrength < 0.005) {
+        if (trendStrength < 0.003) {
+            // DEBUG
+            System.out.println("SKIP (weak trend) @ candle " + n + " trend=" + trendStrength);
             return Optional.empty();
         }
 
+        // ==============================
+        // 🔥 2. VOLATILITY FILTER
+        // ==============================
         double atr = IndicatorService.atr(candles, 14);
 
-// ✅ Relaxed threshold
-        if (atr == 0 || (atr / price) < 0.005) {
+        if (atr == 0 || (atr / price) < 0.002) {
+            // DEBUG
+            System.out.println("SKIP (low volatility) @ candle " + n + " atr=" + (atr / price));
             return Optional.empty();
         }
-        System.out.println("Checking candle " + n +
-                " trend=" + trendStrength +
-                " atr=" + (atr/price));
+
         // ==============================
         // 🔥 3. SLOPE FILTER
         // ==============================
@@ -53,28 +56,38 @@ public class MovingAverageCrossStrategy implements Strategy {
         boolean downtrend = ma50 < prevMa50;
 
         // ==============================
-        // 🔥 4. SIGNAL LOGIC
+        // 🔥 4. HIGHER TIMEFRAME CONFIRMATION
         // ==============================
-        // ==============================
-// 🔥 HIGHER TIMEFRAME FILTER
-// ==============================
         boolean higherTimeframeUp = ma200 > prevMa200;
         boolean higherTimeframeDown = ma200 < prevMa200;
-        // BUY only if higher timeframe supports
-        if (prevMa50 <= prevMa200 && ma50 > ma200 && uptrend && higherTimeframeUp) {
+
+        // ==============================
+        // 🔥 5. ENTRY LOGIC (FIXED)
+        // ==============================
+
+        // ✅ TREND CONTINUATION ENTRY (NOT JUST CROSSOVER)
+        if (ma50 > ma200 && uptrend && higherTimeframeUp) {
+            System.out.println("BUY SIGNAL @ candle " + n +
+                    " trend=" + trendStrength +
+                    " atr=" + (atr / price));
             return Optional.of(new Signal(Signal.Action.BUY, price));
         }
 
-// SELL only if higher timeframe supports
-        if (prevMa50 >= prevMa200 && ma50 < ma200 && downtrend && higherTimeframeDown) {
+        if (ma50 < ma200 && downtrend && higherTimeframeDown) {
+            System.out.println("SELL SIGNAL @ candle " + n +
+                    " trend=" + trendStrength +
+                    " atr=" + (atr / price));
             return Optional.of(new Signal(Signal.Action.SELL, price));
         }
+
+        // DEBUG
+        System.out.println("SKIP (no alignment) @ candle " + n);
 
         return Optional.empty();
     }
 
     // ==============================
-    // 🔥 SCORING FUNCTION (for ranking)
+    // 🔥 SCORING FUNCTION
     // ==============================
     public double score(List<Candle> candles) {
 
